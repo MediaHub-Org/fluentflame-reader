@@ -43,6 +43,12 @@ Evita saturar la red y que un feed lento bloquee el refresco completo.
 - `resources/article/article.css`: estilo responsive, máximo 420 px de alto y esquinas redondeadas.
 - Se evita duplicar la imagen cuando el contenido ya incluye una.
 
+### 7. PRs verdes integradas
+- **#183** `Add service newsblur` — mergeada en la rama privada del fork; tests incluidos.
+- **#207** `Bump ts-loader` — integrada funcionalmente con `npm install --save-dev ts-loader@9.6.2` para evitar el conflicto de lock.
+
+La rama pública de la PR #247 se mantiene limpia, solo con los mods propios.
+
 ## Pendiente / siguientes mods
 - Migración opcional para limpiar duplicados antiguos ya existentes.
 - Revisar el resto de feeds sin fecha para no depender de aislamientos manuales.
