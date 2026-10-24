@@ -38,6 +38,11 @@ Evita saturar la red y que un feed lento bloquee el refresco completo.
 - `src/main/youtube-server.ts`: servidor local en `127.0.0.1:39217` que sirve el iframe (YouTube rechaza el embed desde `file://` con error 153).
 - `src/electron.ts`: arranca el servidor y fija cookies de consentimiento de YouTube.
 
+### 6. Imagen destacada en el artículo
+- `src/components/article.tsx`: si el artículo no trae ya una imagen/vídeo/iframe, se antepone la miniatura del ítem como imagen destacada, después del título y la fecha.
+- `resources/article/article.css`: estilo responsive, máximo 420 px de alto y esquinas redondeadas.
+- Se evita duplicar la imagen cuando el contenido ya incluye una.
+
 ## Pendiente / siguientes mods
 - Migración opcional para limpiar duplicados antiguos ya existentes.
 - Revisar el resto de feeds sin fecha para no depender de aislamientos manuales.
