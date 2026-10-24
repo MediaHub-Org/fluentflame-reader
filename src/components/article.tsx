@@ -16,7 +16,7 @@ import {
 import { RSSSource, SourceTextDirection } from "../scripts/models/source";
 import { shareSubmenu } from "./context-menu";
 import { platformCtrl, decodeFetchResponse } from "../scripts/utils";
-import { getAnimationMotionPref } from "../scripts/settings";
+import { getAnimationMotionPref, getThumbnailTypePref } from "../scripts/settings";
 import { SourceOpenTarget } from "../schema-types";
 
 const FONT_SIZE_OPTIONS = [12, 13, 14, 15, 16, 17, 18, 19, 20];
@@ -455,12 +455,40 @@ class Article extends React.Component<ArticleProps, ArticleState> {
      * I contest that we even need a web-view when we are looking at the RSS/Atom
      * body.
      */
+    private heroImageUrl = (): string | null => {
+        const thumbnails = this.props.item.thumbnails;
+        const preferredType = getThumbnailTypePref();
+        const thumb =
+            thumbnails?.find((t) => t.type === preferredType) ??
+            thumbnails?.[0];
+        const url = thumb?.url ?? this.props.item.thumb;
+        if (!url) return null;
+        try {
+            return new URL(url, this.props.item.link).toString();
+        } catch (e) {
+            return null;
+        }
+    };
+
+    private withHeroImage = (content: string): string => {
+        // Don't duplicate an image/video that the article already contains.
+        if (!content || /<(img|picture|video|iframe)\b/i.test(content)) {
+            return content;
+        }
+        const url = this.heroImageUrl();
+        if (!url) return content;
+        const safeUrl = url
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;");
+        return `<figure class="article-hero"><img src="${safeUrl}" alt=""></figure>${content}`;
+    };
+
     articleView = () => {
-        const a = encodeURIComponent(
-            this.state.loadFull
-                ? this.state.fullContent
-                : this.props.item.content,
-        );
+        const content = this.state.loadFull
+            ? this.state.fullContent
+            : this.props.item.content;
+        const a = encodeURIComponent(this.withHeroImage(content));
         const title = RSSItem.getTitle(this.props.item);
         const h = encodeURIComponent(
             renderToString(
