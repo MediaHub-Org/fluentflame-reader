@@ -26,7 +26,9 @@ Evita saturar la red y que un feed lento bloquee el refresco completo.
 
 ### 4. Diseño de tarjetas
 - `resources/styles/mods.css` (nuevo) e importado al final de `resources/index.css`.
-- Incluye el rediseño de tarjetas: 264×280, radio 14px, portada 16:9, degradado, hover, snippet visible, estados leídos y tarjetas sin portada.
+- Incluye el rediseño de tarjetas: 264×288, radio 14px, portada 16:9, degradado, hover, snippet visible, estados leídos y tarjetas sin portada.
+- Gaps uniformes de **16 px** en horizontal y vertical (8 px por lado, retícula de 8 pt). La celda del listado sigue siendo 280×304, así que la virtualización no se rompe.
+- La página virtualizada se centra (`justify-content: center`) y las tarjetas pasan a `display: block` para eliminar el hueco de baseline; así el hueco real es 16/16 y no 16/21.
 
 ### 5. YouTube
 - `src/scripts/youtube.ts`: extracción de IDs y URL de miniatura/embed.

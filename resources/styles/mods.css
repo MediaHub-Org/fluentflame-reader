@@ -3,8 +3,8 @@
     --card-radius: 14px;
     box-sizing: border-box;
     width: 264px;
-    height: 280px;
-    margin: 12px 8px;
+    height: 288px;
+    margin: 8px;
     border-radius: var(--card-radius);
     background: var(--white);
     border: 1px solid color-mix(in srgb, var(--neutralDarker) 10%, transparent);
@@ -217,4 +217,13 @@
     pointer-events: none;
     backdrop-filter: blur(4px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+}
+
+/* Equal 16px gutters: center the virtualized page and remove the
+   inline-block baseline gap from the list cells. */
+.cards-feed-container .ms-List-page {
+    justify-content: center;
+}
+.cards-feed-container .default-card {
+    display: block;
 }
