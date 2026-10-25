@@ -15,10 +15,7 @@ import { SourceState, RSSSource } from "../scripts/models/source";
 import { ALL, initFeeds } from "../scripts/models/feed";
 import { RootState, useAppSelector, useAppDispatch } from "../scripts/reducer";
 import { toggleMenu, openGroupMenu } from "../scripts/models/app";
-import {
-    toggleGroupExpansion,
-    setAllGroupsExpansion,
-} from "../scripts/models/group";
+import { toggleGroupExpansion } from "../scripts/models/group";
 import {
     selectAllArticles,
     selectSources,
@@ -78,11 +75,6 @@ export default function Menu(): React.JSX.Element {
     const groupContextMenu = (sids: number[], event: React.MouseEvent) => {
         dispatch(openGroupMenu(sids, event));
     };
-    const multiGroups = groups.filter((g) => g.isMultiple);
-    const allGroupsExpanded =
-        multiGroups.length > 0 && multiGroups.every((g) => g.expanded);
-    const toggleAllGroups = () =>
-        dispatch(setAllGroupsExpansion(!allGroupsExpanded));
     const updateGroupExpansion = (
         event: React.MouseEvent<HTMLElement>,
         key: string,
@@ -209,32 +201,22 @@ export default function Menu(): React.JSX.Element {
     };
 
     const onRenderGroupHeader = (group: INavLinkGroup): React.JSX.Element => {
-        if (!group.name) return null;
         return (
-            <div
-                className={
-                    "subs-header-row " + AnimationClassNames.slideDownIn10
-                }>
-                <p className="subs-header">{group.name}</p>
-                <span className="subs-header-actions">
-                    <a
-                        className="subs-header-btn"
-                        title={intl.get(
-                            allGroupsExpanded
-                                ? "menu.collapseAll"
-                                : "menu.expandAll",
-                        )}
-                        onClick={toggleAllGroups}>
-                        <Icon
-                            iconName={
-                                allGroupsExpanded ? "ChevronUp" : "ChevronDown"
-                            }
-                        />
-                    </a>
-                </span>
-            </div>
+            <p className={"subs-header " + AnimationClassNames.slideDownIn10}>
+                {group.name}
+            </p>
         );
     };
+
+    // Sorting/filtering every source and group on every render got
+    // noticeably slow with a large real library (many groups, hundreds of
+    // sources) -- Menu re-renders on lots of state changes that don't touch
+    // this data at all, so memoize it to only redo the work when the
+    // things it actually reads change.
+    const linkGroups = React.useMemo(
+        getLinkGroups,
+        [groups, sources, searchOn, selected],
+    );
 
     if (!status) {
         return null;
@@ -268,7 +250,7 @@ export default function Menu(): React.JSX.Element {
                     <Nav
                         onRenderGroupHeader={onRenderGroupHeader}
                         onRenderLink={onRenderLink}
-                        groups={getLinkGroups()}
+                        groups={linkGroups}
                         selectedKey={selected}
                         onLinkExpandClick={(event, item) =>
                             updateGroupExpansion(event, item.key, selected)
