@@ -23,6 +23,7 @@ export const UPDATE_SOURCE_GROUP = "UPDATE_SOURCE_GROUP";
 export const REORDER_SOURCE_GROUPS = "REORDER_SOURCE_GROUPS";
 export const DELETE_SOURCE_GROUP = "DELETE_SOURCE_GROUP";
 export const TOGGLE_GROUP_EXPANSION = "TOGGLE_GROUP_EXPANSION";
+export const SET_ALL_GROUPS_EXPANSION = "SET_ALL_GROUPS_EXPANSION";
 
 interface CreateSourceGroupAction {
     type: typeof CREATE_SOURCE_GROUP;
@@ -62,6 +63,11 @@ interface ToggleGroupExpansionAction {
     groupIndex: number;
 }
 
+interface SetAllGroupsExpansionAction {
+    type: typeof SET_ALL_GROUPS_EXPANSION;
+    expanded: boolean;
+}
+
 export type SourceGroupActionTypes =
     | CreateSourceGroupAction
     | AddSourceToGroupAction
@@ -69,7 +75,8 @@ export type SourceGroupActionTypes =
     | UpdateSourceGroupAction
     | ReorderSourceGroupsAction
     | DeleteSourceGroupAction
-    | ToggleGroupExpansionAction;
+    | ToggleGroupExpansionAction
+    | SetAllGroupsExpansionAction;
 
 export function createSourceGroupDone(
     group: SourceGroup,
@@ -186,6 +193,16 @@ export function toggleGroupExpansion(groupIndex: number): AppThunk {
         dispatch({
             type: TOGGLE_GROUP_EXPANSION,
             groupIndex: groupIndex,
+        });
+        window.settings.saveGroups(getState().groups);
+    };
+}
+
+export function setAllGroupsExpansion(expanded: boolean): AppThunk {
+    return (dispatch, getState) => {
+        dispatch({
+            type: SET_ALL_GROUPS_EXPANSION,
+            expanded: expanded,
         });
         window.settings.saveGroups(getState().groups);
     };
@@ -440,6 +457,10 @@ export function groupReducer(
                           expanded: !g.expanded,
                       }
                     : g,
+            );
+        case SET_ALL_GROUPS_EXPANSION:
+            return state.map((g) =>
+                g.isMultiple ? { ...g, expanded: action.expanded } : g,
             );
         default:
             return state;

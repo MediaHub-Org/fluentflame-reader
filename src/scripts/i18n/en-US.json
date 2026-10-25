@@ -48,7 +48,9 @@
     },
     "menu": {
         "close": "Close menu",
-        "subscriptions": "Subscriptions"
+        "subscriptions": "Subscriptions",
+        "expandAll": "Expand all",
+        "collapseAll": "Collapse all"
     },
     "addSourceModal": {
         "description": "You can add either link a feed directly, or Fluentflame can check the page for one",
@@ -164,6 +166,8 @@
         "badIcon": "Invalid icon",
         "badUrl": "Invalid URL",
         "deleteWarning": "The source and all saved articles will be removed.",
+        "deleteAll": "Delete all feeds",
+        "deleteAllWarning": "Every feed and saved article will be removed. This cannot be undone — make sure you have a backup (e.g. an OPML export) first.",
         "selected": "Selected source",
         "selectedMulti": "Selected multiple sources",
         "hidden": "Hide in \"all articles\""

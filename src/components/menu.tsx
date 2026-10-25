@@ -15,7 +15,10 @@ import { SourceState, RSSSource } from "../scripts/models/source";
 import { ALL, initFeeds } from "../scripts/models/feed";
 import { RootState, useAppSelector, useAppDispatch } from "../scripts/reducer";
 import { toggleMenu, openGroupMenu } from "../scripts/models/app";
-import { toggleGroupExpansion } from "../scripts/models/group";
+import {
+    toggleGroupExpansion,
+    setAllGroupsExpansion,
+} from "../scripts/models/group";
 import {
     selectAllArticles,
     selectSources,
@@ -32,6 +35,9 @@ const useSources = (state: RootState): SourceState => state.sources;
 function countOverflow(count: number): string {
     return count >= 1000 ? " 999+" : ` ${count}`;
 }
+
+const byName = (a: string, b: string): number =>
+    (a || "").localeCompare(b || "", undefined, { sensitivity: "base" });
 
 /**
  * Sidebar menu.
@@ -72,6 +78,11 @@ export default function Menu(): React.JSX.Element {
     const groupContextMenu = (sids: number[], event: React.MouseEvent) => {
         dispatch(openGroupMenu(sids, event));
     };
+    const multiGroups = groups.filter((g) => g.isMultiple);
+    const allGroupsExpanded =
+        multiGroups.length > 0 && multiGroups.every((g) => g.expanded);
+    const toggleAllGroups = () =>
+        dispatch(setAllGroupsExpansion(!allGroupsExpanded));
     const updateGroupExpansion = (
         event: React.MouseEvent<HTMLElement>,
         key: string,
@@ -116,11 +127,17 @@ export default function Menu(): React.JSX.Element {
                 name: intl.get("menu.subscriptions"),
                 links: groups
                     .filter((g) => g.sids.length > 0)
+                    .sort((a, b) =>
+                        byName(
+                            a.isMultiple ? a.name : sources[a.sids[0]]?.name,
+                            b.isMultiple ? b.name : sources[b.sids[0]]?.name,
+                        ),
+                    )
                     .map((g) => {
                         if (g.isMultiple) {
-                            let groupedSources = g.sids.map(
-                                (sid) => sources[sid],
-                            );
+                            let groupedSources = g.sids
+                                .map((sid) => sources[sid])
+                                .sort((a, b) => byName(a.name, b.name));
                             return {
                                 name: g.name,
                                 ariaLabel:
@@ -192,10 +209,30 @@ export default function Menu(): React.JSX.Element {
     };
 
     const onRenderGroupHeader = (group: INavLinkGroup): React.JSX.Element => {
+        if (!group.name) return null;
         return (
-            <p className={"subs-header " + AnimationClassNames.slideDownIn10}>
-                {group.name}
-            </p>
+            <div
+                className={
+                    "subs-header-row " + AnimationClassNames.slideDownIn10
+                }>
+                <p className="subs-header">{group.name}</p>
+                <span className="subs-header-actions">
+                    <a
+                        className="subs-header-btn"
+                        title={intl.get(
+                            allGroupsExpanded
+                                ? "menu.collapseAll"
+                                : "menu.expandAll",
+                        )}
+                        onClick={toggleAllGroups}>
+                        <Icon
+                            iconName={
+                                allGroupsExpanded ? "ChevronUp" : "ChevronDown"
+                            }
+                        />
+                    </a>
+                </span>
+            </div>
         );
     };
 

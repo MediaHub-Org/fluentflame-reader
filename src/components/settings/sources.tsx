@@ -558,6 +558,24 @@ export default function SourcesTab() {
                 </Stack.Item>
             </Stack>
 
+            {Object.keys(sources).length > 0 && (
+                <Stack horizontal verticalAlign="center">
+                    <Stack.Item>
+                        <DangerButton
+                            onClick={() =>
+                                dispatch(deleteSources(Object.values(sources)))
+                            }
+                            text={intl.get("sources.deleteAll")}
+                        />
+                    </Stack.Item>
+                    <Stack.Item>
+                        <span className="settings-hint">
+                            {intl.get("sources.deleteAllWarning")}
+                        </span>
+                    </Stack.Item>
+                </Stack>
+            )}
+
             <form onSubmit={addSourceFromForm}>
                 <Label htmlFor="newUrl">{intl.get("sources.add")}</Label>
                 <Stack horizontal>
