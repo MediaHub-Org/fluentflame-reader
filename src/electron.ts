@@ -7,6 +7,18 @@ import { startYouTubeServer } from "./main/youtube-server";
 import { type CustomArgs } from "./general-types";
 import minimist from "minimist";
 
+// Chromium can paint the whole window a solid green instead of the real UI
+// on some Windows GPU/driver combinations -- a known compositor bug, not
+// something this app's own code controls. Hardware acceleration buys very
+// little for a text-and-images reading app, so disabling it is a safe trade
+// for actually rendering. Must run before the app is ready / any window
+// exists -- true here regardless, since app.on("ready", ...) only fires
+// later, but kept right after the imports to stay the obvious first thing
+// that runs.
+if (process.platform === "win32") {
+    app.disableHardwareAcceleration();
+}
+
 // Custom Program Arguments -----------------------------------------------------------------------
 
 let CUSTOM_ARGS: CustomArgs;
