@@ -117,6 +117,12 @@ export default function Menu(): React.JSX.Element {
             },
             {
                 name: intl.get("menu.subscriptions"),
+                // A group can end up with a sid whose source no longer
+                // exists (e.g. deleted elsewhere without the group being
+                // cleaned up) -- sources[sid] is then undefined, and every
+                // field read off it below (.name, .unreadCount, ...) would
+                // throw and blank the whole menu. Drop those sids instead
+                // of crashing on them.
                 links: groups
                     .filter((g) => g.sids.length > 0)
                     .sort((a, b) =>
@@ -129,7 +135,9 @@ export default function Menu(): React.JSX.Element {
                         if (g.isMultiple) {
                             let groupedSources = g.sids
                                 .map((sid) => sources[sid])
+                                .filter((s) => s != null)
                                 .sort((a, b) => byName(a.name, b.name));
+                            if (groupedSources.length === 0) return null;
                             return {
                                 name: g.name,
                                 ariaLabel:
@@ -147,9 +155,11 @@ export default function Menu(): React.JSX.Element {
                                 links: groupedSources.map(getSource),
                             };
                         } else {
-                            return getSource(sources[g.sids[0]]);
+                            const source = sources[g.sids[0]];
+                            return source ? getSource(source) : null;
                         }
-                    }),
+                    })
+                    .filter((link) => link !== null),
             },
         ];
     };
