@@ -1,9 +1,9 @@
 import * as React from "react";
 import { AnimationMotionPref } from "../../schema-types";
-import { getAnimationMotionPref } from "../../scripts/settings";
 
 type ImgProps = {
     src: string;
+    animationPref: AnimationMotionPref;
     className?: string;
     width?: number;
     height?: number;
@@ -22,12 +22,10 @@ class CachedImg extends React.Component<ImgProps> {
         | PlaceholderImageSource
     >();
     private readonly _canvasRef = React.createRef<HTMLCanvasElement>();
+    private _animationMotionPref: AnimationMotionPref;
     private _needsRescaling: boolean = true;
     private _imgSource:
-        | HTMLImageElement
-        | HTMLVideoElement
-        | VideoFrame[]
-        | null = null;
+        HTMLImageElement | HTMLVideoElement | VideoFrame[] | null = null;
     private _animationTimeout: NodeJS.Timeout | null = null;
     private _requestVideoFrameCallback: number | null = null;
     private _maxCanvasWidth: number;
@@ -36,6 +34,7 @@ class CachedImg extends React.Component<ImgProps> {
 
     constructor(props: ImgProps) {
         super(props);
+        this._animationMotionPref = props.animationPref;
         this._maxCanvasWidth = props.width ?? 512;
         this._maxCanvasHeight = props.height ?? 512;
     }
@@ -143,14 +142,6 @@ class CachedImg extends React.Component<ImgProps> {
     }
 
     private async renderImage(): Promise<void> {
-        const animationMotionPref = getAnimationMotionPref();
-        const realisedAnimationMotionPref =
-            animationMotionPref !== AnimationMotionPref.System
-                ? animationMotionPref
-                : window.utils.systemPreferencesGetAnimationSettings()
-                        .prefersReducedMotion
-                  ? AnimationMotionPref.Off
-                  : AnimationMotionPref.On;
         if (CachedImg._cache.has(this.props.src)) {
             const imgSource = CachedImg._cache.get(this.props.src);
             if (imgSource === placeholderImageSource) {
@@ -215,47 +206,63 @@ class CachedImg extends React.Component<ImgProps> {
                     this.forceUpdate();
                     return;
                 }
-            } else if (this._imgSource instanceof HTMLVideoElement) {
-                const video = this._imgSource;
-                if (this._requestVideoFrameCallback !== null) {
-                    video.cancelVideoFrameCallback(
-                        this._requestVideoFrameCallback,
-                    );
-                    this._requestVideoFrameCallback = null;
-                }
-                const requestFrame = () => {
-                    this.draw(video);
-                    if (realisedAnimationMotionPref === AnimationMotionPref.On)
-                        this._requestVideoFrameCallback =
-                            video.requestVideoFrameCallback(requestFrame);
-                };
-                if (video.readyState < video.HAVE_CURRENT_DATA)
-                    video.addEventListener("loadeddata", requestFrame);
-                else requestFrame();
             } else {
-                const frames = this._imgSource;
-                let frameIndex = 0;
-                if (this._animationTimeout) {
-                    clearTimeout(this._animationTimeout);
-                    this._animationTimeout = null;
-                }
-                const drawFrame = () => {
-                    if (frames.length === 0) return;
-                    const frame = frames[frameIndex];
-                    const duration = frame.duration / 1000;
-                    this.draw(frame);
-                    if (
-                        frames.length > 1 &&
-                        realisedAnimationMotionPref === AnimationMotionPref.On
-                    ) {
-                        frameIndex = (frameIndex + 1) % frames.length;
-                        this._animationTimeout = setTimeout(
-                            () => drawFrame(),
-                            duration,
+                const realisedAmp =
+                    this._animationMotionPref !== AnimationMotionPref.System
+                        ? this._animationMotionPref
+                        : window.utils.systemPreferencesGetAnimationSettings()
+                                .prefersReducedMotion
+                          ? AnimationMotionPref.Off
+                          : AnimationMotionPref.On;
+
+                if (this._imgSource instanceof HTMLVideoElement) {
+                    const video = this._imgSource;
+                    if (this._requestVideoFrameCallback !== null) {
+                        video.cancelVideoFrameCallback(
+                            this._requestVideoFrameCallback,
                         );
+                        this._requestVideoFrameCallback = null;
                     }
-                };
-                drawFrame();
+                    const requestFrame = async () => {
+                        this.draw(video);
+                        const realisedAnimationMotionPref = realisedAmp;
+                        if (
+                            realisedAnimationMotionPref ===
+                            AnimationMotionPref.On
+                        )
+                            this._requestVideoFrameCallback =
+                                video.requestVideoFrameCallback(requestFrame);
+                    };
+                    if (video.readyState < video.HAVE_CURRENT_DATA)
+                        video.addEventListener("loadeddata", requestFrame);
+                    else await requestFrame();
+                } else {
+                    const frames = this._imgSource;
+                    let frameIndex = 0;
+                    if (this._animationTimeout) {
+                        clearTimeout(this._animationTimeout);
+                        this._animationTimeout = null;
+                    }
+                    const drawFrame = async () => {
+                        if (frames.length === 0) return;
+                        const frame = frames[frameIndex];
+                        const duration = frame.duration / 1000;
+                        this.draw(frame);
+                        const realisedAnimationMotionPref = realisedAmp;
+                        if (
+                            frames.length > 1 &&
+                            realisedAnimationMotionPref ===
+                                AnimationMotionPref.On
+                        ) {
+                            frameIndex = (frameIndex + 1) % frames.length;
+                            this._animationTimeout = setTimeout(
+                                () => drawFrame(),
+                                duration,
+                            );
+                        }
+                    };
+                    await drawFrame();
+                }
             }
         }
     }
